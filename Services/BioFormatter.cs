@@ -2,13 +2,19 @@ using NowTuneTG.Models;
 
 namespace NowTuneTG.Services;
 
-
-public class BioFormatter{
-    public string Format(NowPlaying? NowPlaying)
+public class BioFormatter
+{
+    public string Format(NowPlaying? nowPlaying)
     {
-        if(NowPlaying is null || !NowPlaying.IsPlaying)
-            return "|| Nothing playing";
+        string text = nowPlaying == null || !nowPlaying.IsPlaying
+            ? "⏸ Nothing playing"
+            : $" {nowPlaying.ArtistName} - {nowPlaying.TrackName}";
 
-        return $"{NowPlaying.ArtistName} - {NowPlaying.TrackName}";
+        const int maxLength = 70;
+
+        if (text.Length > maxLength)
+            text = text[..maxLength];
+
+        return text;
     }
 }

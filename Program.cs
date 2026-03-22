@@ -13,26 +13,35 @@ SpotifySettings spotifySettings = config
     .GetSection("Spotify")
     .Get<SpotifySettings>() ?? throw new Exception("Spotify settings not found");
 
-var spotifyService = new SpotifyService(spotifySettings);
+var tokenStore = new SpotifyTokenStore();
+var spotifyService = new SpotifyService(spotifySettings, tokenStore);
 var bioFormatter = new BioFormatter();
 var telegramProfileService = new TelegramProfileService();
 var syncService = new SyncService(spotifyService, bioFormatter, telegramProfileService);
 
-string loginUrl = spotifyService.GetLoginUrl();
+bool restored = await spotifyService.TryRestoreSessionAsync();
 
-Console.WriteLine("Open this URL in your browser:");
-Console.WriteLine(loginUrl);
-Console.WriteLine();
-Console.Write("Paste the ?code= value here: ");
+if (!restored)
+{
+    string loginUrl = spotifyService.GetLoginUrl();
 
-string? code = Console.ReadLine();
+    Console.WriteLine("Open this URL in your browser:");
+    Console.WriteLine(loginUrl);
+    Console.WriteLine();
+    Console.Write("Paste the ?code= value here: ");
 
-if (string.IsNullOrWhiteSpace(code))
-    throw new Exception("Code was empty");
+    string? code = Console.ReadLine();
 
-await spotifyService.ExchangeCodeAsync(code);
+    if (string.IsNullOrWhiteSpace(code))
+        throw new Exception("Code was empty");
 
-Console.WriteLine("Spotify connected successfully.");
+    await spotifyService.ExchangeCodeAsync(code);
+    Console.WriteLine("Spotify connected and tokens saved.");
+}
+else
+{
+    Console.WriteLine("Spotify session restored from file.");
+}
+
 Console.WriteLine("Starting sync loop...");
-
 await syncService.RunAsync();
