@@ -13,11 +13,26 @@ SpotifySettings spotifySettings = config
     .GetSection("Spotify")
     .Get<SpotifySettings>() ?? throw new Exception("Spotify settings not found");
 
+TelegramSettings telegramSettings = config
+    .GetSection("Telegram")
+    .Get<TelegramSettings>() ?? throw new Exception("Telegram settings not found");
+
 var tokenStore = new SpotifyTokenStore();
 var spotifyService = new SpotifyService(spotifySettings, tokenStore);
 var bioFormatter = new BioFormatter();
-var telegramProfileService = new TelegramProfileService();
-var syncService = new SyncService(spotifyService, bioFormatter, telegramProfileService);
+
+var telegramProfileService = new TelegramProfileService(
+    telegramSettings.ApiId,
+    telegramSettings.ApiHash
+);
+
+await telegramProfileService.InitAsync();
+
+var syncService = new SyncService(
+    spotifyService,
+    bioFormatter,
+    telegramProfileService
+);
 
 bool restored = await spotifyService.TryRestoreSessionAsync();
 
@@ -42,6 +57,8 @@ else
 {
     Console.WriteLine("Spotify session restored from file.");
 }
+
+await telegramProfileService.UpdateBioAsync("test bio from c#");
 
 Console.WriteLine("Starting sync loop...");
 await syncService.RunAsync();
