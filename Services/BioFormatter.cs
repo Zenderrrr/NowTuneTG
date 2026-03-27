@@ -8,7 +8,7 @@ public class BioFormatter
     {
         string text = nowPlaying == null || !nowPlaying.IsPlaying
             ? "⏸ Nothing playing"
-            : $" {nowPlaying.ArtistName} - {nowPlaying.TrackName}";
+            : $"Now playing: {nowPlaying.ArtistName} - {nowPlaying.TrackName}";
 
         const int maxLength = 70;
 
